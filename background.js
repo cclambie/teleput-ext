@@ -1,4 +1,4 @@
-
+const N8N_URL = "your n8n webhook url here";
 
 function createContextMenus() {
   chrome.contextMenus.removeAll(function() {
