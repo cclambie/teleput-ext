@@ -1,3 +1,5 @@
+
+
 function createContextMenus() {
   chrome.contextMenus.removeAll(function() {
     const menus = [
@@ -22,10 +24,27 @@ function handleContextMenuWithKey(info, tab, key) {
 
   switch (info.menuItemId) {
     case "send-url":
-      if (info.linkText && info.linkText != info.linkUrl)
-        params['text'] = info.linkText + ': ' + info.linkUrl
-      else
-        params['text'] = info.linkUrl
+      // Check if it's a telephone link
+      // For telephone links, send just the tel: URL (Telegram auto-detects it)
+      if (info.linkText && info.linkText != info.linkUrl) {
+        params['text'] = info.linkText;
+        params['url'] = info.linkUrl;  // Send URL separately
+        }
+      // Check if it's a mailto link
+      else if (info.linkUrl.startsWith('mailto:')) {
+        const email = info.linkUrl.substring(7);
+        const displayText = info.linkText || email;
+        params['text'] = `<a href="mailto:${email}">${displayText}</a>`;
+        params['parse_mode'] = 'HTML';
+      }
+      // Regular links
+      else if (info.linkText && info.linkText != info.linkUrl) {
+        params['text'] = `<a href="${info.linkUrl}">${info.linkText}</a>`;
+        params['parse_mode'] = 'HTML';
+      }
+      else {
+        params['text'] = info.linkUrl;
+      }
       break;
     case "send-selection":
       params['text'] = info.selectionText + '\n\n' + info.pageUrl;
@@ -58,7 +77,7 @@ function handleContextMenuWithKey(info, tab, key) {
         formData.append('media', content);
         return { method: 'POST', body: formData };
       }).then(options => {
-        return window.fetch('https://teleput.textual.ru/upload', options);
+        return window.fetch(N8N_URL, options);
       })
       .catch(error => {
         console.error('Error uploading file', error);
@@ -70,7 +89,7 @@ function handleContextMenuWithKey(info, tab, key) {
           body: JSON.stringify(params),
           headers: { 'Content-Type': 'application/json' }
         };
-        return window.fetch('https://teleput.textual.ru/post', options);
+        return window.fetch(N8N_URL, options);
       });
   } else if (params.text) {
     const options = {
@@ -78,7 +97,7 @@ function handleContextMenuWithKey(info, tab, key) {
       body: JSON.stringify(params),
       headers: { 'Content-Type': 'application/json' }
     };
-    window.fetch('https://teleput.textual.ru/post', options)
+    window.fetch(N8N_URL, options)
       .then(response => {
         if (!response.ok)
           console.error('Teleput server error: ' + response.statusText);
