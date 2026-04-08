@@ -22,10 +22,30 @@ function handleContextMenuWithKey(info, tab, key) {
 
   switch (info.menuItemId) {
     case "send-url":
-      if (info.linkText && info.linkText != info.linkUrl)
-        params['text'] = info.linkText + ': ' + info.linkUrl
-      else
-        params['text'] = info.linkUrl
+      // Check if it's a telephone link
+      if (info.linkUrl.startsWith('tel:')) {
+        // Decode the URL-encoded phone number and remove spaces for the href
+        const phoneNumber = decodeURIComponent(info.linkUrl.substring(4)).replace(/\s/g, '');
+        const displayText = info.linkText || phoneNumber;
+        // Send as HTML formatted link
+        params['text'] = `<a href="tel:${phoneNumber}">${displayText}</a>`;
+        params['parse_mode'] = 'HTML';
+      }
+      // Check if it's a mailto link
+      else if (info.linkUrl.startsWith('mailto:')) {
+        const email = info.linkUrl.substring(7);
+        const displayText = info.linkText || email;
+        params['text'] = `<a href="mailto:${email}">${displayText}</a>`;
+        params['parse_mode'] = 'HTML';
+      }
+      // Regular links
+      else if (info.linkText && info.linkText != info.linkUrl) {
+        params['text'] = `<a href="${info.linkUrl}">${info.linkText}</a>`;
+        params['parse_mode'] = 'HTML';
+      }
+      else {
+        params['text'] = info.linkUrl;
+      }
       break;
     case "send-selection":
       params['text'] = info.selectionText + '\n\n' + info.pageUrl;
