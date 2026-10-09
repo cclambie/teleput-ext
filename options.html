@@ -3,6 +3,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      #contactform label { display: block; margin-top: 8px; }
+      #contactform input, #contactform textarea { width: 100%; box-sizing: border-box; }
+      #contactform textarea { height: 150px; }
+      #contactform button { margin-top: 8px; }
+    </style>
   </head>
   <body>
     <p>To get your key, open <a href="https://t.me/teleput_bot">@teleput_bot</a>
@@ -11,6 +17,24 @@
       <label for="key">Key:&nbsp;</label>
       <input type="text" id="key">
       <button type="submit">Save</button>
+    </form>
+
+    <h3>Contact form</h3>
+    <p>Right-click a page and choose "Fill contact form" to fill its contact form
+      with these details. In the subject and message, <tt>&lt;domain&gt;</tt> is replaced
+      with the site's domain (e.g. <tt>example.com.au</tt>) and
+      <tt>&lt;domain_no_ext&gt;</tt> with the name alone (e.g. <tt>example</tt>).</p>
+    <form id="contactform">
+      <label for="contact-name">Name (optional):</label>
+      <input type="text" id="contact-name">
+      <label for="contact-email">Email:</label>
+      <input type="email" id="contact-email" required>
+      <label for="contact-subject">Subject:</label>
+      <input type="text" id="contact-subject">
+      <label for="contact-message">Message:</label>
+      <textarea id="contact-message" required></textarea>
+      <button type="submit">Save</button>
+      <span id="contact-status"></span>
     </form>
     <script src="options.js"></script>
   </body>

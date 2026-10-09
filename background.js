@@ -9,7 +9,9 @@ function createContextMenus() {
       // { id: "send-audio", title: "Send audio to Telegram", contexts: ["audio"] },
       // { id: "send-video", title: "Send video to Telegram", contexts: ["video"] },
       { id: "send-media-url", title: "Send media URL to Telegram",
-        contexts: ["image", "audio", "video"] }
+        contexts: ["image", "audio", "video"] },
+      { id: "fill-contact-form", title: "Fill contact form",
+        contexts: ["page", "editable", "frame"] }
     ];
     for (let menu of menus) {
       chrome.contextMenus.create(menu);
@@ -109,7 +111,35 @@ function handleContextMenuWithKey(info, tab, key) {
   }
 }
 
+function fillContactForm(info, tab) {
+  chrome.storage.sync.get('contactForm', stored => {
+    const contact = stored && stored.contactForm;
+    if (!contact || !contact.email || !contact.message) {
+      chrome.runtime.openOptionsPage();
+      return;
+    }
+    const data = Object.assign({}, contact, { targetElementId: info.targetElementId });
+    const target = { frameId: info.frameId || 0 };
+    chrome.tabs.executeScript(tab.id, Object.assign({
+      code: 'window.__teleputContactData = ' + JSON.stringify(data) + ';'
+    }, target), () => {
+      if (chrome.runtime.lastError) {
+        console.error('Failed to inject contact data', chrome.runtime.lastError);
+        return;
+      }
+      chrome.tabs.executeScript(tab.id, Object.assign({ file: 'fill_contact_form.js' }, target), () => {
+        if (chrome.runtime.lastError)
+          console.error('Failed to fill contact form', chrome.runtime.lastError);
+      });
+    });
+  });
+}
+
 function handleContextMenu(info, tab) {
+  if (info.menuItemId == 'fill-contact-form') {
+    fillContactForm(info, tab);
+    return;
+  }
   chrome.storage.sync.get('teleputKey', stored => {
     if (!stored || !stored.teleputKey) {
       chrome.runtime.openOptionsPage();
